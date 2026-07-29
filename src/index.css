@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[marquee_28s_linear_infinite\] { animation: none; }
+}
+
+html { scroll-behavior: smooth; }
+
+/* Decorative elements (hero palms) intentionally poke past the viewport
+   edges; clip so they never create a horizontal scrollbar. */
+html, body { overflow-x: clip; }
+
+body {
+  font-family: 'Outfit', system-ui, sans-serif;
+  background-color: #1f394f;
+  color: #1f394f;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Paper grain */
+.paper-grain {
+  background-image:
+    radial-gradient(circle at 18% 28%, rgba(0,0,0,.022) 0%, transparent 55%),
+    radial-gradient(circle at 82% 72%, rgba(0,0,0,.018) 0%, transparent 55%);
+}
+
+/* Film grain overlay */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Polaroid frame */
+.polaroid {
+  background: #ffffff;
+  padding: 12px 12px 52px 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 14px 32px -10px rgba(0,0,0,.38);
+}
+
+/* Editorial drop cap — first letter of a lead paragraph */
+.dropcap::first-letter {
+  float: left;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 4.2rem;
+  line-height: 0.82;
+  margin: 0.28rem 0.7rem 0 0;
+  color: #f0803c;
+}
+
+/* Receipt perforation */
+.perf-line {
+  background-image: linear-gradient(to right, #1f394f 50%, transparent 50%);
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+  background-position: center;
+  height: 1px;
+}
+
+/* ── SCROLL REVEAL ENGINE ── */
+/* Base state */
+[data-reveal] {
+  opacity: 0;
+  will-change: opacity, transform;
+  transition:
+    opacity    0.85s cubic-bezier(.16,1,.3,1),
+    transform  0.85s cubic-bezier(.16,1,.3,1);
+}
+[data-reveal="up"]    { transform: translateY(48px); }
+[data-reveal="down"]  { transform: translateY(-40px); }
+[data-reveal="left"]  { transform: translateX(64px); }
+[data-reveal="right"] { transform: translateX(-64px); }
+[data-reveal="scale"] { transform: scale(0.86); }
+[data-reveal="tilt"]  { transform: rotate(-6deg) scale(0.9); }
+
+/* Visible state (added by observer) */
+[data-reveal].rv-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Stagger children */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(36px);
+  transition:
+    opacity   0.7s cubic-bezier(.16,1,.3,1),
+    transform 0.7s cubic-bezier(.16,1,.3,1);
+}
+[data-stagger].rv-visible > *:nth-child(1)  { opacity:1; transform:none; transition-delay: 0ms; }
+[data-stagger].rv-visible > *:nth-child(2)  { opacity:1; transform:none; transition-delay: 100ms; }
+[data-stagger].rv-visible > *:nth-child(3)  { opacity:1; transform:none; transition-delay: 200ms; }
+[data-stagger].rv-visible > *:nth-child(4)  { opacity:1; transform:none; transition-delay: 300ms; }
+[data-stagger].rv-visible > *:nth-child(5)  { opacity:1; transform:none; transition-delay: 400ms; }
+[data-stagger].rv-visible > *:nth-child(6)  { opacity:1; transform:none; transition-delay: 500ms; }
+
+/* Parallax layer */
+.parallax-slow { will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], [data-stagger] > * { opacity:1 !important; transform:none !important; transition:none; }
+}
+
+/* ── FIND YOUR ISLAND ── */
+/* Arrival choreography, triggered by .fyi-in on the section (FindYourIsland.tsx).
+   Postcards toss in from opposite edges and settle at a slight tilt. */
+.fyi-card {
+  opacity: 0;
+  will-change: opacity, transform;
+  translate: 0 0;
+  transition:
+    opacity   0.95s cubic-bezier(.16,1,.3,1),
+    transform 0.95s cubic-bezier(.16,1,.3,1),
+    translate 0.35s cubic-bezier(.33,1,.68,1),
+    box-shadow 0.35s ease;
+}
+.fyi-card-brighton { transform: translate(-72px, 26px) rotate(-7deg); }
+.fyi-card-london   { transform: translate(72px, 26px)  rotate(7deg); }
+.fyi-in .fyi-card-brighton { opacity: 1; transform: translate(0, 0) rotate(-1.4deg); }
+/* London's entrance stagger delays opacity/transform only — translate and
+   box-shadow (the hover lift) must stay instant or hover-out lags 140ms */
+.fyi-in .fyi-card-london   { opacity: 1; transform: translate(0, 0) rotate(1.4deg); transition-delay: 140ms, 140ms, 0s, 0s; }
+
+/* Postcard hover — a straight lift off the wall (individual `translate`
+   composes with the entrance `transform`, so the resting tilt is untouched
+   and the lift gets its own quicker timing). Shadow deepens like the card
+   came closer. focus-within keeps keyboard parity with the doodle bloom. */
+.fyi-in .fyi-card:hover,
+.fyi-in .fyi-card:focus-within {
+  translate: 0 -10px;
+  box-shadow: 0 34px 60px -14px rgb(31 57 79 / 0.38), 0 12px 24px -10px rgb(31 57 79 / 0.25);
+}
+
+/* Postmark stamps thump down after the cards land */
+.fyi-stamp {
+  opacity: 0;
+  transform: scale(1.8) rotate(16deg);
+  transition:
+    opacity   0.4s ease-out,
+    transform 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+.fyi-in .fyi-stamp { opacity: 1; transform: scale(1) rotate(-8deg); transition-delay: 700ms; }
+.fyi-in .fyi-card-london .fyi-stamp { transition-delay: 880ms; }
+
+/* Dashed travel route wipes on Brighton → Angel (mask stroke, pathLength=1) */
+.fyi-route-reveal {
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.7s cubic-bezier(.4,0,.2,1) 0.45s;
+}
+.fyi-in .fyi-route-reveal { stroke-dashoffset: 0; }
+.fyi-dot { opacity: 0; transition: opacity 0.4s ease 0.6s; }
+.fyi-in .fyi-dot { opacity: 1; }
+
+/* Faint GB ghost map fades in with the section (per-pin bloom is inline in TSX) */
+.fyi-ghostmap { opacity: 0; transition: opacity 1.2s ease 0.3s; }
+.fyi-in .fyi-ghostmap { opacity: 1; }
+
+/* Sketch doodles on the wall — slow bob; opacity is driven per-branch from
+   FindYourIsland.tsx (hover a postcard → its branch's doodles wake up) */
+.fyi-doodle { animation: fyi-doodle-float 7s ease-in-out infinite alternate; }
+/* Wall-art prints share the bob, slower — they are heavier things on the wall */
+.fyi-art { animation: fyi-doodle-float 10s ease-in-out infinite alternate; }
+/* House Specials wall (SpecialDishes.tsx) reuses the same bob — kitchen doodles
+   a touch quicker than the hung prints */
+.sd-doodle { animation: fyi-doodle-float 8s ease-in-out infinite alternate; }
+.sd-art { animation: fyi-doodle-float 11s ease-in-out infinite alternate; }
+@keyframes fyi-doodle-float {
+  from { transform: translateY(-4px); }
+  to   { transform: translateY(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fyi-card, .fyi-stamp { opacity:1 !important; transform:none !important; translate:none !important; transition:none; }
+  .fyi-route-reveal { stroke-dashoffset:0 !important; transition:none; }
+  .fyi-dot { opacity:0 !important; }
+  .fyi-ghostmap { opacity:1 !important; transition:none; }
+  .fyi-doodle, .fyi-art, .sd-doodle, .sd-art { animation: none; }
+}
+
+/* Paintbrush edges — alpha-masks a poster block so its rim looks hand-brushed
+   onto the wall instead of die-cut. Two turbulence-displaced rects: a faint
+   outer wash (thin paint) under the solid body. The mask clips children too,
+   so keep text ~40px clear of the rim. */
+.brush-edges {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 608 1088' preserveAspectRatio='none'><filter id='a' x='-6%25' y='-6%25' width='112%25' height='112%25'><feTurbulence type='fractalNoise' baseFrequency='0.03 0.018' numOctaves='4' seed='8' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='26'/></filter><filter id='b' x='-6%25' y='-6%25' width='112%25' height='112%25'><feTurbulence type='fractalNoise' baseFrequency='0.024 0.014' numOctaves='4' seed='31' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='34'/></filter><rect x='8' y='8' width='592' height='1072' fill='%23fff' opacity='0.45' filter='url(%23b)'/><rect x='15' y='15' width='578' height='1058' fill='%23fff' filter='url(%23a)'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 608 1088' preserveAspectRatio='none'><filter id='a' x='-6%25' y='-6%25' width='112%25' height='112%25'><feTurbulence type='fractalNoise' baseFrequency='0.03 0.018' numOctaves='4' seed='8' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='26'/></filter><filter id='b' x='-6%25' y='-6%25' width='112%25' height='112%25'><feTurbulence type='fractalNoise' baseFrequency='0.024 0.014' numOctaves='4' seed='31' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='34'/></filter><rect x='8' y='8' width='592' height='1072' fill='%23fff' opacity='0.45' filter='url(%23b)'/><rect x='15' y='15' width='578' height='1058' fill='%23fff' filter='url(%23a)'/></svg>");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
