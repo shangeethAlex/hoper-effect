@@ -122,7 +122,7 @@ const TEXTS: { eyebrow?: string; line: string; display?: boolean }[] = [
   { eyebrow: 'Slow-fermented, cooked to order', line: 'Our signature hopper, inspired by the flavours of Sri Lanka.' },
   { eyebrow: 'Golden rim, spongy heart', line: 'Crisp at the edge. Soft at the heart.' },
   { eyebrow: 'Sambols, spice & fire', line: 'Surrounded by the bold flavours of Sri Lanka.' },
-  { eyebrow: 'From our kitchen to your table', line: 'Discover the Taste of Coconut Island', display: true },
+  { eyebrow: 'From our kitchen to your table', line: 'Pick Your Flavours', display: true },
 ];
 
 const MENU_HREF = '#specials';
@@ -325,12 +325,14 @@ export function CoconutIslandHopper() {
       const steam = steamRef.current;
       if (steam) steam.style.opacity = String(seg(s4raw, 0.1, 0.5) * 0.8);
 
-      // ---- continuous colour grade: dusk market → golden hour ----
+      // ---- continuous colour grade: cool daylight → warm golden ----
+      // Brightness stays at/above 1 so the white ground never greys down; the
+      // warm-up now rides mostly on saturation and the gold wash.
       const grade = smooth(p);
       if (duskRef.current) duskRef.current.style.opacity = String(0.85 * (1 - grade));
       if (goldRef.current) goldRef.current.style.opacity = String(grade * 0.9);
       if (sceneRef.current) {
-        sceneRef.current.style.filter = `brightness(${0.92 + grade * 0.14}) saturate(${0.9 + grade * 0.25})`;
+        sceneRef.current.style.filter = `brightness(${1 + grade * 0.03}) saturate(${0.92 + grade * 0.22})`;
       }
 
       // ---- one caption at a time ----
@@ -381,7 +383,12 @@ export function CoconutIslandHopper() {
       }
 
       // ---- exit window: drift up and re-darken under IslandJourney's curtain ----
-      if (stageRef.current) stageRef.current.style.transform = `translate3d(0, ${-ex * 10}vh, 0)`;
+      if (stageRef.current) {
+        stageRef.current.style.transform = `translate3d(0, ${-ex * 10}vh, 0)`;
+        // Once the stage starts re-darkening it is no longer a light ground,
+        // so hand the header logo back to its white artwork.
+        stageRef.current.toggleAttribute('data-light-nav', ex < 0.15);
+      }
       if (exitShadeRef.current) exitShadeRef.current.style.opacity = String(ex * 0.55);
     };
 
@@ -482,18 +489,23 @@ export function CoconutIslandHopper() {
   const primaryBtn =
     'group relative overflow-hidden rounded-full bg-orange-500 px-8 py-4 text-[12px] font-bold uppercase tracking-widest2 text-white shadow-lg transition-all duration-200 hover:bg-orange-600 hover:shadow-xl active:scale-95';
   const secondaryBtn =
-    'inline-flex items-center rounded-full border border-white/30 px-8 py-4 text-[12px] font-bold uppercase tracking-widest2 text-white transition-all duration-200 hover:border-white hover:bg-white hover:text-navy-500 active:scale-95';
+    'inline-flex items-center rounded-full border border-navy-500/30 px-8 py-4 text-[12px] font-bold uppercase tracking-widest2 text-navy-500 transition-all duration-200 hover:border-navy-500 hover:bg-navy-500 hover:text-white active:scale-95';
 
   return (
     <section
       ref={sectionRef}
       id="hopper"
-      className="relative -mt-[100vh] bg-navy-900 motion-safe:h-[500vh] motion-safe:sm:h-[700vh] motion-reduce:mt-0"
+      className="relative -mt-[100vh] bg-white motion-safe:h-[500vh] motion-safe:sm:h-[700vh] motion-reduce:mt-0"
     >
       {/* Pinned stage */}
+      {/* `data-light-nav` flips the header logo to navy while this white
+          surface is under it. Both carriers are display:none when inactive,
+          so each only measures when it is the one actually on screen; the
+          scrub additionally clears it once the exit curtain starts. */}
       <div
         ref={stageRef}
-        className="sticky top-0 h-screen overflow-hidden bg-navy-900 will-change-transform motion-reduce:hidden"
+        data-light-nav
+        className="sticky top-0 h-screen overflow-hidden bg-white will-change-transform motion-reduce:hidden"
       >
         <h2 className="sr-only">The Coconut Island Hopper — a signature taste of the island</h2>
 
@@ -502,12 +514,7 @@ export function CoconutIslandHopper() {
           <div
             className="absolute inset-0"
             aria-hidden="true"
-            style={{ background: 'radial-gradient(56% 46% at 50% 60%, rgba(240,128,60,0.16), transparent 72%)' }}
-          />
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-10"
-            aria-hidden="true"
-            style={{ backgroundImage: "url('/images/blue.png')" }}
+            style={{ background: 'radial-gradient(56% 46% at 50% 60%, rgba(240,128,60,0.05), transparent 72%)' }}
           />
 
           <div className="absolute inset-0 z-[1] flex items-center justify-center">
@@ -519,7 +526,7 @@ export function CoconutIslandHopper() {
                 aria-hidden="true"
                 className="absolute inset-x-[10%] bottom-[4%] h-[38%] rounded-full will-change-transform"
                 style={{
-                  background: 'radial-gradient(closest-side, rgba(4,9,18,0.6), transparent 72%)',
+                  background: 'radial-gradient(closest-side, rgba(31,57,79,0.16), transparent 72%)',
                   opacity: 0,
                 }}
               />
@@ -529,7 +536,7 @@ export function CoconutIslandHopper() {
                 ref={rotateRef}
                 className="absolute inset-0 will-change-transform"
                 role="img"
-                aria-label="A Sri Lankan hopper — crisp golden edge, soft centre — surrounded by coconut sambol, seeni sambol, dried chillies, cinnamon, cardamom and curry leaves"
+                aria-label="A Sri Lankan hopper — crisp golden edge, soft centre — surrounded by an assortment of Sri Lankan curries, sambols and sides"
               >
                 {([IMG.side, IMG.threeq, IMG.neartop, IMG.topdown] as string[]).map((src, k) => (
                   <img
@@ -541,7 +548,7 @@ export function CoconutIslandHopper() {
                     draggable={false}
                     loading="lazy"
                     decoding="async"
-                    className="pointer-events-none absolute inset-[6%] h-[88%] w-[88%] object-contain will-change-transform [filter:drop-shadow(0_26px_30px_rgba(4,9,18,0.5))]"
+                    className="pointer-events-none absolute inset-[6%] h-[88%] w-[88%] object-contain will-change-transform [filter:drop-shadow(0_22px_26px_rgba(31,57,79,0.18))]"
                     style={{ opacity: k === 0 ? undefined : 0 }}
                   />
                 ))}
@@ -553,7 +560,7 @@ export function CoconutIslandHopper() {
                 <canvas
                   ref={canvasRef}
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-[6%] h-[88%] w-[88%] will-change-transform [filter:drop-shadow(0_26px_30px_rgba(4,9,18,0.5))]"
+                  className="pointer-events-none absolute inset-[6%] h-[88%] w-[88%] will-change-transform [filter:drop-shadow(0_22px_26px_rgba(31,57,79,0.18))]"
                   style={{ opacity: 0 }}
                 />
 
@@ -567,13 +574,17 @@ export function CoconutIslandHopper() {
                     draggable={false}
                     loading="lazy"
                     decoding="async"
-                    className={`pointer-events-none absolute ${sp.cls} will-change-transform [filter:drop-shadow(0_16px_20px_rgba(4,9,18,0.55))]`}
+                    className={`pointer-events-none absolute ${sp.cls} will-change-transform [filter:drop-shadow(0_14px_18px_rgba(31,57,79,0.22))]`}
                     style={{ opacity: 0 }}
                   />
                 ))}
               </div>
 
-              {/* Steam rises straight up, so it lives outside the spinning wrapper */}
+              {/* Steam rises straight up, so it lives outside the spinning
+                  wrapper. The still is white-on-black for screen blending,
+                  which resolves to pure white against this ground — it is
+                  kept mounted but held at zero, since the only thing it could
+                  do on white is wash out the hopper's rim. */}
               <img
                 ref={steamRef}
                 src={IMG.steam}
@@ -582,27 +593,22 @@ export function CoconutIslandHopper() {
                 draggable={false}
                 loading="lazy"
                 decoding="async"
-                className="pointer-events-none absolute left-1/2 top-[-14%] ml-[-21%] w-[42%] mix-blend-screen animate-floatY"
-                style={{
-                  opacity: 0,
-                  // The steam still is white-on-black for screen blending; crush its
-                  // floor to true black and feather the frame so no rectangle shows.
-                  filter: 'contrast(1.4) brightness(1.06)',
-                  maskImage: 'radial-gradient(46% 46% at 50% 50%, black 28%, transparent 72%)',
-                  WebkitMaskImage: 'radial-gradient(46% 46% at 50% 50%, black 28%, transparent 72%)',
-                }}
+                className="pointer-events-none absolute left-1/2 top-[-14%] ml-[-21%] hidden w-[42%] mix-blend-screen animate-floatY"
+                style={{ opacity: 0 }}
               />
             </div>
           </div>
         </div>
 
-        {/* Colour-grade overlays: cool dusk fades out, warm gold fades in */}
+        {/* Colour-grade overlays: on white these are barely-there washes — a
+            cool tint gives way to a warm one so the "warming up" arc survives
+            without the background ever reading as anything but white. */}
         <div
           ref={duskRef}
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-[2]"
           style={{
-            background: 'linear-gradient(180deg, rgba(14,27,44,0.55), rgba(8,15,26,0.75))',
+            background: 'linear-gradient(180deg, rgba(31,57,79,0.025), rgba(31,57,79,0.05))',
             opacity: 0.85,
           }}
         />
@@ -611,7 +617,7 @@ export function CoconutIslandHopper() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-[2]"
           style={{
-            background: 'radial-gradient(70% 55% at 50% 62%, rgba(240,128,60,0.2), transparent 72%)',
+            background: 'radial-gradient(70% 55% at 50% 62%, rgba(240,128,60,0.09), transparent 72%)',
             opacity: 0,
           }}
         />
@@ -626,19 +632,21 @@ export function CoconutIslandHopper() {
               style={{ opacity: 0 }}
             >
               {t.eyebrow && (
-                <p className="font-sans text-[11px] font-semibold uppercase tracking-widest2 text-orange-400">
+                <p className="font-sans text-[11px] font-semibold uppercase tracking-widest2 text-orange-500">
                   {t.eyebrow}
                 </p>
               )}
               {t.display ? (
+                // Brush lettering: Permanent Marker ships a single weight, and
+                // its strokes need room, so no font-black and no tight tracking.
                 <p
-                  className="mx-auto mt-3 max-w-4xl font-display font-black uppercase leading-[0.95] tracking-tightest text-white [text-shadow:0_2px_40px_rgba(4,9,18,0.6)]"
-                  style={{ fontSize: 'clamp(1.9rem, 4.6vw, 4rem)' }}
+                  className="mx-auto mt-3 max-w-5xl font-marker uppercase leading-[0.92] text-navy-500"
+                  style={{ fontSize: 'clamp(2.1rem, 6.2vw, 5.25rem)' }}
                 >
                   {t.line}
                 </p>
               ) : (
-                <p className="mx-auto mt-3 max-w-2xl font-serif text-xl italic text-white/85 [text-shadow:0_2px_24px_rgba(4,9,18,0.7)] sm:text-2xl">
+                <p className="mx-auto mt-3 max-w-2xl font-serif text-xl italic text-navy-500/80 sm:text-2xl">
                   {t.line}
                 </p>
               )}
@@ -652,7 +660,7 @@ export function CoconutIslandHopper() {
           className="absolute inset-x-0 bottom-[6vh] z-[4] flex flex-col items-center gap-3 px-5 sm:bottom-[9vh] sm:gap-5"
           style={{ opacity: 0, visibility: 'hidden', pointerEvents: 'none' }}
         >
-          <p className="font-serif text-base italic text-white/80 [text-shadow:0_2px_24px_rgba(4,9,18,0.7)] sm:text-xl">
+          <p className="font-serif text-base italic text-navy-500/75 sm:text-xl">
             Fresh Sri Lankan flavours and island vibes in Brighton and Angel.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -681,7 +689,7 @@ export function CoconutIslandHopper() {
               onClick={() => jumpTo(i)}
               title={STAGE_LABELS[i]}
               aria-label={`Go to step ${i + 1} of ${STAGES.length}: ${STAGE_LABELS[i]}`}
-              className="group relative h-3 w-3 rounded-full border border-white/40 transition-colors hover:border-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900"
+              className="group relative h-3 w-3 rounded-full border border-navy-500/40 transition-colors hover:border-navy-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
               <span
                 ref={(el) => (dotRefs.current[i] = el)}
@@ -697,18 +705,18 @@ export function CoconutIslandHopper() {
       </div>
 
       {/* Reduced-motion fallback: the finished composition, no pin, no scrub */}
-      <div className="hidden motion-reduce:block">
+      <div data-light-nav className="hidden motion-reduce:block">
         <div className="mx-auto max-w-[1400px] px-5 py-20 text-center sm:px-8 sm:py-28">
-          <p className="font-sans text-[11px] font-semibold uppercase tracking-widest2 text-orange-400">
+          <p className="font-sans text-[11px] font-semibold uppercase tracking-widest2 text-orange-500">
             The Coconut Island Hopper
           </p>
           <h2
-            className="mt-3 font-display font-black uppercase leading-[0.95] tracking-tightest text-white"
-            style={{ fontSize: 'clamp(2rem, 5vw, 4rem)' }}
+            className="mt-3 font-marker uppercase leading-[0.92] text-navy-500"
+            style={{ fontSize: 'clamp(2.1rem, 6vw, 5rem)' }}
           >
-            Discover the Taste of <span className="text-orange-500">Coconut Island</span>
+            Pick Your Flavours
           </h2>
-          <p className="mx-auto mt-4 max-w-xl font-serif text-lg italic text-white/80">
+          <p className="mx-auto mt-4 max-w-xl font-serif text-lg italic text-navy-500/75">
             Crisp at the edge, soft at the heart — our signature hopper, surrounded by the bold flavours of Sri Lanka.
           </p>
 
@@ -717,7 +725,7 @@ export function CoconutIslandHopper() {
               src={IMG.topdown}
               alt="Top-down view of a Sri Lankan hopper with a crisp golden edge and soft centre"
               decoding="async"
-              className="absolute inset-[6%] h-[88%] w-[88%] object-contain [filter:drop-shadow(0_26px_30px_rgba(4,9,18,0.5))]"
+              className="absolute inset-[6%] h-[88%] w-[88%] object-contain [filter:drop-shadow(0_22px_26px_rgba(31,57,79,0.18))]"
             />
             {SPRITES.map((sp) => (
               <img
@@ -725,12 +733,12 @@ export function CoconutIslandHopper() {
                 src={sp.src}
                 alt=""
                 decoding="async"
-                className={`absolute ${sp.cls} [filter:drop-shadow(0_16px_20px_rgba(4,9,18,0.55))]`}
+                className={`absolute ${sp.cls} [filter:drop-shadow(0_14px_18px_rgba(31,57,79,0.22))]`}
               />
             ))}
           </div>
 
-          <p className="mt-10 font-serif text-lg italic text-white/80">
+          <p className="mt-10 font-serif text-lg italic text-navy-500/75">
             Fresh Sri Lankan flavours and island vibes in Brighton and Angel.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4">

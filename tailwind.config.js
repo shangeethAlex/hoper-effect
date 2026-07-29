@@ -49,6 +49,9 @@ export default {
         serif:   ['"Cormorant Garamond"', 'Georgia', 'serif'],
         display: ['"Playfair Display"',   'Georgia', 'serif'],
         sans:    ['"Outfit"', 'system-ui', 'sans-serif'],
+        // The brand's hand-painted brush lettering (already loaded in
+        // index.html and used by the Hero's marker strokes).
+        marker:  ['"Permanent Marker"', 'cursive'],
       },
       letterSpacing: {
         tightest: '-0.04em',

@@ -14,12 +14,29 @@ const NAV = [
 export function Header({ location }: { location?: IslandLocation }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [lightNav, setLightNav] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    // The logo artwork is near-white, so it disappears over a light section.
+    // Sections that render on a pale ground opt in with `data-light-nav`, and
+    // the logo flips to navy while one of them sits under the header band.
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+      const band = 96;
+      setLightNav(
+        [...document.querySelectorAll<HTMLElement>('[data-light-nav]')].some((el) => {
+          const r = el.getBoundingClientRect();
+          return r.top < band && r.bottom > 0;
+        })
+      );
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -46,7 +63,26 @@ export function Header({ location }: { location?: IslandLocation }) {
             className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 sm:block"
             aria-label="The Coconut Island — home"
           >
-            <img src="/images/logo-tci.svg" alt="The Coconut Island" className="h-10 w-auto sm:h-12" />
+            {lightNav ? (
+              // Same artwork, masked to solid navy so it reads on a pale
+              // ground. The link's aria-label carries the accessible name.
+              <span
+                aria-hidden="true"
+                className="block h-10 w-auto aspect-[300/257] bg-navy-500 sm:h-12"
+                style={{
+                  WebkitMaskImage: 'url(/images/logo-tci.svg)',
+                  maskImage: 'url(/images/logo-tci.svg)',
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                }}
+              />
+            ) : (
+              <img src="/images/logo-tci.svg" alt="The Coconut Island" className="h-10 w-auto sm:h-12" />
+            )}
           </Link>
 
           {/* MENU trigger — top left, rounded white */}
